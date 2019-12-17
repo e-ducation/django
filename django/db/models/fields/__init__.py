@@ -50,7 +50,7 @@ __all__ = [str(x) for x in (
     'FloatField', 'GenericIPAddressField', 'IPAddressField', 'IntegerField',
     'NOT_PROVIDED', 'NullBooleanField', 'PositiveIntegerField',
     'PositiveSmallIntegerField', 'SlugField', 'SmallIntegerField', 'TextField',
-    'TimeField', 'URLField', 'UUIDField',
+    'TimeField', 'URLField', 'UUIDField', 'HashCharField',
 )]
 
 

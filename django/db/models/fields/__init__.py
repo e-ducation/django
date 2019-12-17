@@ -21,6 +21,7 @@ from django.core import checks, exceptions, validators
 from django.core.exceptions import FieldDoesNotExist  # NOQA
 from django.db import connection, connections, router
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.hasher import AESCipher
 from django.db.models.query_utils import DeferredAttribute, RegisterLookupMixin
 from django.utils import six, timezone
 from django.utils.datastructures import DictWrapper
@@ -2412,17 +2413,14 @@ class UUIDField(Field):
 
 class HashCharField(CharField):
 
-    def __init__(self, verbose_name=None, name=None, hasher=None, *args, **kwargs):
+    def __init__(self, verbose_name=None, name=None, *args, **kwargs):
         if 'prefix' in kwargs:
             self.prefix = kwargs['prefix']
             del kwargs['prefix']
         else:
             self.prefix = "hash_str:::"
 
-        if hasher is None:
-            raise ValueError("None is not a valid value for hasher")
-
-        self.hasher = hasher
+        self.hasher = AESCipher
         super(HashCharField, self).__init__(*args, **kwargs)
 
     def deconstruct(self):

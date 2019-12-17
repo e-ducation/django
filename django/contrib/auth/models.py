@@ -8,7 +8,6 @@ from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models.manager import EmptyManager
-from django.db.models.hasher import AESCipher
 from django.utils import six, timezone
 from django.utils.deprecation import CallableFalse, CallableTrue
 from django.utils.encoding import python_2_unicode_compatible
@@ -319,7 +318,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     # email = models.EmailField(_('email address'), blank=True)
-    email = models.HashCharField(_('email address'), max_length=256, blank=True, hasher=AESCipher)
+    email = models.HashCharField(_('email address'), max_length=256, blank=True)
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,

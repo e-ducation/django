@@ -812,7 +812,7 @@ class Field(RegisterLookupMixin):
         limit_choices_to = limit_choices_to or self.get_limit_choices_to()
         if hasattr(self.remote_field, 'get_related_field'):
             lst = [(getattr(x, self.remote_field.get_related_field().attname),
-                   smart_text(x))
+                    smart_text(x))
                    for x in rel_model._default_manager.complex_filter(
                        limit_choices_to)]
         else:
@@ -2408,3 +2408,51 @@ class UUIDField(Field):
         }
         defaults.update(kwargs)
         return super(UUIDField, self).formfield(**defaults)
+
+
+class HashCharField(CharField):
+
+    def __init__(self, verbose_name=None, name=None, hasher=None, *args, **kwargs):
+        if 'prefix' in kwargs:
+            self.prefix = kwargs['prefix']
+            del kwargs['prefix']
+        else:
+            self.prefix = "hash_str:::"
+
+        if hasher is None:
+            raise ValueError("None is not a valid value for hasher")
+
+        self.hasher = hasher
+        super(HashCharField, self).__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(HashCharField, self).deconstruct()
+        if self.prefix != "hash_str:::":
+            kwargs['prefix'] = self.prefix
+        return name, path, args, kwargs
+
+    def from_db_value(self, value, expression, connection, context):
+        if value is None:
+            return value
+        if value.startswith(self.prefix):
+            value = value[len(self.prefix):]
+            value = self.hasher.decrypt(value)
+        return value
+
+    def to_python(self, value):
+        if value is None:
+            return value
+        elif value.startswith(self.prefix):
+            value = value[len(self.prefix):]
+            value = self.hasher.decrypt(value)
+
+        return value
+
+    def get_prep_value(self, value):
+        if isinstance(value, str) or isinstance(value, unicode):
+            value = self.hasher.encrypt(value)
+            value = self.prefix + value
+        elif value is not None:
+            raise TypeError(str(value) + " is not a valid value for HashCharField")
+
+        return value

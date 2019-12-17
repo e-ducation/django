@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models.manager import EmptyManager
-from django.db.hasher import AESCipher
+from django.db.models.hasher import AESCipher
 from django.utils import six, timezone
 from django.utils.deprecation import CallableFalse, CallableTrue
 from django.utils.encoding import python_2_unicode_compatible

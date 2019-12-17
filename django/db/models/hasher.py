@@ -6,6 +6,7 @@ from django.conf import settings
 
 
 class AESCipher(object):
+    iv = b'X\x04\xa76\xe9\x9e\x19Sx\xe3CE*/\xb1.'
 
     @classmethod
     def encrypt(cls, raw):
@@ -13,7 +14,7 @@ class AESCipher(object):
             return raw
         key = hashlib.sha256(settings.AES_KEY).digest()
         raw = cls._pad(raw)        
-        iv = settings.AES_IV
+        iv = cls.iv
         cipher = AES.new(key, AES.MODE_CBC, iv)
         return base64.b64encode(iv + cipher.encrypt(raw.encode()))
 

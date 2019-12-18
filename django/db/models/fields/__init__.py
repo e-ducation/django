@@ -813,7 +813,7 @@ class Field(RegisterLookupMixin):
         limit_choices_to = limit_choices_to or self.get_limit_choices_to()
         if hasattr(self.remote_field, 'get_related_field'):
             lst = [(getattr(x, self.remote_field.get_related_field().attname),
-                    smart_text(x))
+                   smart_text(x))
                    for x in rel_model._default_manager.complex_filter(
                        limit_choices_to)]
         else:

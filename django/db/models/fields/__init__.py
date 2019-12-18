@@ -21,6 +21,7 @@ from django.core import checks, exceptions, validators
 from django.core.exceptions import FieldDoesNotExist  # NOQA
 from django.db import connection, connections, router
 from django.db.models.constants import LOOKUP_SEP
+from django.db.models.hasher import AESCipher
 from django.db.models.query_utils import DeferredAttribute, RegisterLookupMixin
 from django.utils import six, timezone
 from django.utils.datastructures import DictWrapper
@@ -50,7 +51,7 @@ __all__ = [str(x) for x in (
     'FloatField', 'GenericIPAddressField', 'IPAddressField', 'IntegerField',
     'NOT_PROVIDED', 'NullBooleanField', 'PositiveIntegerField',
     'PositiveSmallIntegerField', 'SlugField', 'SmallIntegerField', 'TextField',
-    'TimeField', 'URLField', 'UUIDField',
+    'TimeField', 'URLField', 'UUIDField', 'HashCharField',
 )]
 
 
@@ -2408,3 +2409,48 @@ class UUIDField(Field):
         }
         defaults.update(kwargs)
         return super(UUIDField, self).formfield(**defaults)
+
+
+class HashCharField(CharField):
+
+    def __init__(self, verbose_name=None, name=None, *args, **kwargs):
+        if 'prefix' in kwargs:
+            self.prefix = kwargs['prefix']
+            del kwargs['prefix']
+        else:
+            self.prefix = "hash_str:::"
+
+        self.hasher = AESCipher
+        super(HashCharField, self).__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(HashCharField, self).deconstruct()
+        if self.prefix != "hash_str:::":
+            kwargs['prefix'] = self.prefix
+        return name, path, args, kwargs
+
+    def from_db_value(self, value, expression, connection, context):
+        if value is None:
+            return value
+        if value.startswith(self.prefix):
+            value = value[len(self.prefix):]
+            value = self.hasher.decrypt(value)
+        return value
+
+    def to_python(self, value):
+        if value is None:
+            return value
+        elif value.startswith(self.prefix):
+            value = value[len(self.prefix):]
+            value = self.hasher.decrypt(value)
+
+        return value
+
+    def get_prep_value(self, value):
+        if isinstance(value, str) or isinstance(value, unicode):
+            value = self.hasher.encrypt(value)
+            value = self.prefix + value
+        elif value is not None:
+            raise TypeError(str(value) + " is not a valid value for HashCharField")
+
+        return value

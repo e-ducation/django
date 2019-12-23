@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.core.exceptions import EmptyResultSet
 from django.db.models.expressions import Func, Value
 from django.db.models.fields import (
-    DateTimeField, DecimalField, Field, IntegerField,
+    DateTimeField, DecimalField, Field, IntegerField, HashCharField
 )
 from django.db.models.query_utils import RegisterLookupMixin
 from django.utils.deprecation import RemovedInDjango20Warning
@@ -292,6 +292,7 @@ class IntegerFieldFloatRounding(object):
     Allow floats to work as query values for IntegerField. Without this, the
     decimal portion of the float would always be discarded.
     """
+
     def get_prep_lookup(self):
         if isinstance(self.rhs, float):
             self.rhs = math.ceil(self.rhs)
@@ -622,3 +623,15 @@ class YearLte(YearComparisonLookup):
 
     def get_bound(self, start, finish):
         return finish
+
+
+@HashCharField.register_lookup
+class HashCharIExact(BuiltinLookup):
+    lookup_name = 'iexact'
+    prepare_rhs = True
+
+    def process_rhs(self, qn, connection):
+        rhs, params = super(HashCharIExact, self).process_rhs(qn, connection)
+        if params:
+            params[0] = connection.ops.prep_for_iexact_query(params[0])
+        return rhs, params

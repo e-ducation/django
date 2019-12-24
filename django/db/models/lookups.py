@@ -292,7 +292,6 @@ class IntegerFieldFloatRounding(object):
     Allow floats to work as query values for IntegerField. Without this, the
     decimal portion of the float would always be discarded.
     """
-
     def get_prep_lookup(self):
         if isinstance(self.rhs, float):
             self.rhs = math.ceil(self.rhs)
